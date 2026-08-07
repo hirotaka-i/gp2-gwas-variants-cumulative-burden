@@ -120,7 +120,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+*.env
 .venv
 env/
 venv/
@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 .nextflow/
-temp/
+temp/*
+!temp/.gitkeep
 _*
 variant_list/
