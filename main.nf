@@ -183,13 +183,17 @@ process STEP07_NORMALIZE {
     """
     set -euo pipefail
 
+    # Copy reference to local disk to avoid GCS FUSE stale file handle on .fai
+    cp "${reference_fasta}" local_ref.fa.gz
+    cp "${reference_fasta_fai}" local_ref.fa.gz.fai
+
     plink2 \\
       --pfile step06_cleaned \\
       --export vcf id-delim='^' \\
       --out step07_from_plink
 
     vcf_for_norm="step07_from_plink.vcf"
-    if awk 'NR==1 { exit (\$1 ~ /^chr/) ? 0 : 1 }' "${reference_fasta_fai}"; then
+    if awk 'NR==1 { exit (\$1 ~ /^chr/) ? 0 : 1 }' "local_ref.fa.gz.fai"; then
       cat > step07_chr_rename.txt <<'EOF'
 1 chr1
 2 chr2
@@ -227,7 +231,7 @@ EOF
     fi
 
     bcftools norm \\
-      -f "${reference_fasta}" \\
+      -f "local_ref.fa.gz" \\
       -Ov \\
       -o step07_normalized.vcf \\
       "\${vcf_for_norm}"
@@ -265,7 +269,7 @@ process STEP08_SCORE {
 
     plink2 \\
       --pfile step07_final \\
-      --score "${score_file}" 1 2 3 list-variants  cols=+scoresums,+denom \\
+      --score "${score_file}" 1 2 3 list-variants cols='+scoresums,+denom' \\
       --out "${score_name}"
     cp -f "${score_name}.log" "${score_name}.score.log"
 
