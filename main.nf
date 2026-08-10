@@ -265,7 +265,7 @@ process STEP08_SCORE {
 
     plink2 \\
       --pfile step07_final \\
-      --score "${score_file}" 1 2 3 list-variants \\
+      --score "${score_file}" 1 2 3 list-variants  cols=+scoresums,+denom \\
       --out "${score_name}"
     cp -f "${score_name}.log" "${score_name}.score.log"
 
