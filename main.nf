@@ -145,9 +145,7 @@ process STEP06_CLEAN {
     tuple val(ancestry), path(merged_pgen), path(merged_pvar), path(merged_psam), path(exclude_list)
 
     output:
-    tuple val(ancestry), path("step06_cleaned.pgen"), emit: pgen
-    tuple val(ancestry), path("step06_cleaned.pvar"), emit: pvar
-    tuple val(ancestry), path("step06_cleaned.psam"), emit: psam
+    tuple val(ancestry), path("step06_cleaned.pgen"), path("step06_cleaned.pvar"), path("step06_cleaned.psam"), emit: cleaned
     tuple val(ancestry), path("step06_cleaned.log"), emit: log
 
     script:
@@ -328,12 +326,7 @@ workflow {
         .map { anc, pgen, pvar, psam, excl -> tuple(anc, pgen, pvar, psam, excl) }
     def step6 = STEP06_CLEAN(step6input)
 
-    // Join cleaned pgen/pvar/psam by ancestry for STEP07
-    def step7input = step6.pgen
-        .join(step6.pvar)
-        .join(step6.psam)
-        .map { anc, pgen, pvar, psam -> tuple(anc, pgen, pvar, psam) }
-    def step7 = STEP07_NORMALIZE(step7input, hg38Ref, hg38RefFai)
+    def step7 = STEP07_NORMALIZE(step6.cleaned, hg38Ref, hg38RefFai)
 
     def scoreEntries = []
     if (!isBlank(params.score_file)) {
