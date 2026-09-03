@@ -176,6 +176,8 @@ process STEP07_NORMALIZE {
     tuple val(ancestry), path("step07_normalized.vcf")
     tuple val(ancestry), path("step07_final.pgen"), path("step07_final.pvar"), path("step07_final.psam"), emit: normalized
     tuple val(ancestry), path("step07_final.log")
+    tuple val(ancestry), path("all_ref_count.raw"), emit: all_ref_count
+    tuple val(ancestry), path("all_ref_count.log")
 
     script:
     """
@@ -240,6 +242,11 @@ EOF
       --set-all-var-ids 'chr@:#:\$r:\$a' \\
       --make-pgen \\
       --out step07_final
+
+    plink2 \\
+      --pfile step07_final \\
+      --export A \\
+      --out all_ref_count
     """
 }
 
@@ -345,8 +352,9 @@ workflow {
     }
 
     if (scoreEntries) {
+        def uniqueScoreEntries = scoreEntries.unique()
         def scoreFiles = Channel
-            .from(scoreEntries.unique())
+            .from(uniqueScoreEntries)
             .map { p ->
                 def base = p.tokenize('/').last()
                 def scoreName = base.replaceFirst(/\\.score$/, '')

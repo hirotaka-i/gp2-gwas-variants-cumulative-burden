@@ -1,6 +1,6 @@
 ## PRS calculation pipeline for GP2 imputed genotypes
 
-This pipeline builds simple PRS from independent GWAS hits using `plink2 --score` and also generates the raw file with individual alternative allele counts for these risk associated variants from one or more score files. It runs all ancestry groups in parallel in a single Nextflow execution.
+This pipeline builds simple PRS from independent GWAS hits using `plink2 --score`. It also generates two raw allele-count style outputs: per-score `.raw` files in Step 08 for score-listed variants, and `all_ref_count.raw` in Step 07 for the fully normalized merged plink set before score-specific filtering. It runs all ancestry groups in parallel in a single Nextflow execution.
 
 The list(s) of variants needs to be stored in the variant_list folder (not committed) and prepped one in the `temp` folder. An example for the variant list is provided in `variant_list/example.txt` and the formatting script `code/format_variant_list.py` prepares the combined BED file and score files consumed by the pipeline.
 
@@ -85,7 +85,7 @@ graph TD
     CLEAN -->|step06_cleaned.*| NORM["STEP07: Normalize Variants<br/>(STEP07_NORMALIZE)"]
     R --> NORM
 
-    NORM -->|step07_final.*| SCORE["STEP08: PRS Scoring<br/>(STEP08_SCORE)"]
+    NORM -->|step07_final.*<br/>all_ref_count.raw| SCORE["STEP08: PRS Scoring<br/>(STEP08_SCORE)"]
     S --> SCORE
 
     SCORE -->|sscore, raw, logs<br/>per score file × ancestry| OUT["Output<br/>{ancestry}/temp/step_08_score"]
@@ -147,7 +147,8 @@ graph TD
 - Harmonizes chromosome naming when reference index uses `chr*` format.
 - Left-normalizes against hg38 reference FASTA.
 - Converts normalized VCF back to plink and sets IDs to `chr:pos:ref:alt`.
-- Produces `step07_normalized.vcf` and final plink set `step07_final.pgen/.pvar/.psam`.
+- Exports `all_ref_count.raw` from the final normalized plink set using `plink2 --export A`.
+- Produces `step07_normalized.vcf`, final plink set `step07_final.pgen/.pvar/.psam`, and `all_ref_count.raw`.
 - Published under `temp/step_07_normalize`.
 
 #### Step 08: PRS scoring (`STEP08_SCORE`)
@@ -179,6 +180,8 @@ Published outputs are organized under this base path, with each ancestry in its 
     step07_normalized.vcf
     step07_final.pgen/.pvar/.psam
     step07_final.log
+    all_ref_count.raw
+    all_ref_count.log
   step_08_score/
     <score_name>.sscore
     <score_name>.sscore.vars

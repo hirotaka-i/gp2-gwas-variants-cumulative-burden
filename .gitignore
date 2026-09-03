@@ -164,3 +164,6 @@ temp/*
 !temp/.gitkeep
 _*
 variant_list/
+.DS_Store
+
+ppmi/
